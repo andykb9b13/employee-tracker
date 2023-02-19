@@ -21,4 +21,5 @@ app.use('/api', api);
 
 app.get('*', (req, res) => res.json('Please use one of the other routes'));
 
-app.listen(PORT, () => console.log(`listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+
