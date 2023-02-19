@@ -1,5 +1,4 @@
-const { default: inquirer } = require("inquirer");
-
+const inquirer = require("inquirer");
 
 function initiateProgram() {
     inquirer
