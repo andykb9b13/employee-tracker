@@ -114,6 +114,7 @@ function addDepartment() {
 
 function addRole() {
     console.log("in the add Role function");
+    updateDepartments();
     inquirer
         .prompt([
             {
@@ -218,7 +219,7 @@ function updateRoles() {
         } else {
             console.log("success")
             for (let result of results) {
-                roleArray.push(result.title)
+                roleArray.push(result.id)
             }
         }
         console.log("This is the role array", roleArray)
@@ -232,7 +233,7 @@ function updateDepartments() {
         } else {
             console.log("success")
             for (let result of results) {
-                departmentArray.push(result.name)
+                departmentArray.push(result.id)
             }
         }
         console.log("This is the department array", departmentArray)
@@ -246,7 +247,7 @@ function updateManagers() {
         } else {
             console.log("success")
             for (let result of results) {
-                managerArray.push(result.first_name + ' ' + result.last_name)
+                managerArray.push(result.id)
             }
         }
         console.log("This is the manager array", managerArray)
