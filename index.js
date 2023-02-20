@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
+const { resourceLimits } = require('worker_threads');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
@@ -12,7 +13,10 @@ const db = mysql.createConnection(
 )
 
 const employeeArray = [];
-const roleArray = [];
+const roleArray = [1, 2, 3];
+const departmentArray = [1, 2, 3];
+const managerArray = [1, 2, 3]
+
 
 function viewEmployees() {
     db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
@@ -116,7 +120,7 @@ function addRole() {
             {
                 type: "text",
                 message: "What is the name of the role?",
-                name: "roleName"
+                name: "title"
             },
             {
                 type: "number",
@@ -126,15 +130,38 @@ function addRole() {
             {
                 type: "list",
                 message: "What is the department for this role?",
-                name: "roleDept",
+                name: "department_id",
                 // choices: [need a function to get the existing departments, need array for departments?]
-                choices: ["choice 1", "choice 2"]
+                choices: departmentArray
             }
         ])
         .then((response) => {
+            db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
+                [response.title, response.salary, response.department_id], function (err, results) {
+                    if (err) {
+                        console.log("There was an error inserting into roles", err)
+                    } else {
+                        console.log("Success!")
+                    }
+                    initiateProgram();
+                })
+
         })
-    initiateProgram();
 }
+
+// function roleChoices() {
+//     db.query('SELECT * FROM roles', function (err, results) {
+//         if (err) {
+//             console.log("There was an error getting the roles")
+//         } else {
+//             for (let i = 0; i < results.length; i++) {
+//                 roleArray.push(results[i].title)
+//             }
+//         } return roleArray
+//     })
+// }
+
+
 
 function addEmployee() {
     console.log("in the add employee function");
@@ -143,32 +170,43 @@ function addEmployee() {
             {
                 type: "text",
                 message: "What is the first name of the employee?",
-                name: "firstName"
+                name: "first_name"
             },
             {
                 type: "text",
                 message: "What is the last name of the employee?",
-                name: "lastName"
-            },
-            {
-                type: "list",
-                message: "What is the role of the employee?",
-                name: "employeeRole",
-                // choices: [need a function to get the list of roles, need an array of roles?]
-                choices: ["choice 1", "choice 2"]
+                name: "last_name"
             },
             {
                 type: "list",
                 message: "Who is the manager of the employee?",
-                name: "managerName"
+                name: "manager_id",
+                choices: managerArray
                 // choices: [need a function to get the list of managers, need array of managers?]
-            }
-        ])
-        .then((reponse) => {
+            },
+            {
+                type: "list",
+                message: "What is the role of the employee?",
+                name: "role_id",
+                // choices: [need a function to get the list of roles, need an array of roles?]
+                choices: roleArray
+            },
 
+        ])
+        .then((response) => {
+            db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
+                [response.first_name, response.last_name, response.manager_id, response.role_id], function (err, results) {
+                    if (err) {
+                        console.log("There was an error inserting into Employees", err)
+                    } else {
+                        console.log("Success writing employee");
+                    }
+                })
+            initiateProgram();
         })
-    initiateProgram();
+
 }
+
 
 function updateEmployee() {
     console.log("in the update employee function");
