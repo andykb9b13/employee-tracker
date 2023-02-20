@@ -12,7 +12,8 @@ const db = mysql.createConnection(
 )
 
 const employeeArray = [];
-const roleArray = [];
+const roleArray = ["Salesperson", "Sales Lead", "Accountant", "Account Manager"];
+const departmentArray = [1, 2, 3];
 
 function viewEmployees() {
     db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
@@ -116,7 +117,7 @@ function addRole() {
             {
                 type: "text",
                 message: "What is the name of the role?",
-                name: "roleName"
+                name: "title"
             },
             {
                 type: "number",
@@ -126,18 +127,42 @@ function addRole() {
             {
                 type: "list",
                 message: "What is the department for this role?",
-                name: "roleDept",
+                name: "department_id",
                 // choices: [need a function to get the existing departments, need array for departments?]
-                choices: ["choice 1", "choice 2"]
+                choices: departmentArray
             }
         ])
         .then((response) => {
+            db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
+                [response.title, response.salary, response.department_id], function (err, results) {
+                    if (err) {
+                        console.log("Error in adding role", err)
+                    } else {
+                        console.log("Success! Added Role")
+                    }
+                })
+            initiateProgram();
         })
-    initiateProgram();
+
 }
+
+// function roleChoices() {
+//     db.query('SELECT * FROM roles', function (err, results) {
+//         if (err) {
+//             console.log("There was an error getting the roles")
+//         } else {
+//             for (let i = 0; i < results.length; i++) {
+//                 roleArray.push(results[i].title)
+//             }
+//         } return roleArray
+//     })
+// }
+
+
 
 function addEmployee() {
     console.log("in the add employee function");
+    roleChoices();
     inquirer
         .prompt([
             {
@@ -155,7 +180,7 @@ function addEmployee() {
                 message: "What is the role of the employee?",
                 name: "employeeRole",
                 // choices: [need a function to get the list of roles, need an array of roles?]
-                choices: ["choice 1", "choice 2"]
+                choices: roleArray
             },
             {
                 type: "list",
@@ -165,10 +190,11 @@ function addEmployee() {
             }
         ])
         .then((reponse) => {
-
+            initiateProgram();
         })
-    initiateProgram();
+
 }
+
 
 function updateEmployee() {
     console.log("in the update employee function");
