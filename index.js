@@ -12,41 +12,9 @@ const db = mysql.createConnection(
     console.log("connected to the employees_db database")
 )
 
-const employeeArray = [];
-const roleArray = [1, 2, 3];
-const departmentArray = [1, 2, 3];
-const managerArray = [1, 2, 3]
-
-
-function viewEmployees() {
-    db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
-        if (err) {
-            console.log(err)
-        }
-        console.table("List of Employees", results);
-        initiateProgram();
-    })
-}
-
-function viewRoles() {
-    db.query('SELECT * FROM roles', function (err, results) {
-        if (err) {
-            console.log(err)
-        }
-        console.table("Employee Roles", results);
-        initiateProgram();
-    })
-};
-
-function viewDepartments() {
-    db.query('SELECT * FROM departments', function (err, results) {
-        if (err) {
-            console.log(err)
-        }
-        console.table("Departments", results);
-        initiateProgram();
-    })
-};
+const roleArray = [];
+const departmentArray = [];
+const managerArray = [];
 
 function initiateProgram() {
     inquirer
@@ -55,7 +23,7 @@ function initiateProgram() {
                 type: "list",
                 message: "What would you like to do?",
                 name: "select",
-                choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role"]
+                choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Quit"]
             }
         ])
         .then((response) => {
@@ -82,12 +50,43 @@ function initiateProgram() {
                     updateEmployee()
                     break;
                 case "Quit":
-                    endProgram()
-                    break
+                    console.log("Goodbye!")
+                    return
             }
         })
 }
 
+
+
+function viewEmployees() {
+    db.query('SELECT employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("List of Employees", results);
+        initiateProgram();
+    })
+}
+
+function viewRoles() {
+    db.query('SELECT roles.title, roles.salary, departments.name FROM roles JOIN departments ON roles.department_id = departments.id', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("Employee Roles", results);
+        initiateProgram();
+    })
+};
+
+function viewDepartments() {
+    db.query('SELECT * FROM departments', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("Departments", results);
+        initiateProgram();
+    })
+};
 
 function addDepartment() {
     console.log("in the add department function")
@@ -115,6 +114,7 @@ function addDepartment() {
 
 function addRole() {
     console.log("in the add Role function");
+    updateDepartments();
     inquirer
         .prompt([
             {
@@ -149,22 +149,11 @@ function addRole() {
         })
 }
 
-// function roleChoices() {
-//     db.query('SELECT * FROM roles', function (err, results) {
-//         if (err) {
-//             console.log("There was an error getting the roles")
-//         } else {
-//             for (let i = 0; i < results.length; i++) {
-//                 roleArray.push(results[i].title)
-//             }
-//         } return roleArray
-//     })
-// }
-
-
-
 function addEmployee() {
     console.log("in the add employee function");
+    updateRoles();
+    updateDepartments();
+    updateManagers();
     inquirer
         .prompt([
             {
@@ -207,7 +196,6 @@ function addEmployee() {
 
 }
 
-
 function updateEmployee() {
     console.log("in the update employee function");
     inquirer
@@ -222,6 +210,48 @@ function updateEmployee() {
 
         })
     initiateProgram();
+}
+
+function updateRoles() {
+    db.query('SELECT * FROM roles', (err, results) => {
+        if (err) {
+            console.log("couldn't get roles")
+        } else {
+            console.log("success")
+            for (let result of results) {
+                roleArray.push(result.id)
+            }
+        }
+        console.log("This is the role array", roleArray)
+    })
+}
+
+function updateDepartments() {
+    db.query('SELECT * FROM departments', (err, results) => {
+        if (err) {
+            console.log("couldn't get departments")
+        } else {
+            console.log("success")
+            for (let result of results) {
+                departmentArray.push(result.id)
+            }
+        }
+        console.log("This is the department array", departmentArray)
+    })
+}
+
+function updateManagers() {
+    db.query('SELECT first_name, last_name FROM employees WHERE role_id = 7', (err, results) => {
+        if (err) {
+            console.log("couldn't get managers")
+        } else {
+            console.log("success")
+            for (let result of results) {
+                managerArray.push(result.id)
+            }
+        }
+        console.log("This is the manager array", managerArray)
+    })
 }
 
 initiateProgram();
