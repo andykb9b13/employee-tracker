@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
+const { resourceLimits } = require('worker_threads');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
@@ -12,8 +13,10 @@ const db = mysql.createConnection(
 )
 
 const employeeArray = [];
-const roleArray = ["Salesperson", "Sales Lead", "Accountant", "Account Manager"];
+const roleArray = [1, 2, 3];
 const departmentArray = [1, 2, 3];
+const managerArray = [1, 2, 3]
+
 
 function viewEmployees() {
     db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
@@ -136,14 +139,14 @@ function addRole() {
             db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
                 [response.title, response.salary, response.department_id], function (err, results) {
                     if (err) {
-                        console.log("Error in adding role", err)
+                        console.log("There was an error inserting into roles", err)
                     } else {
-                        console.log("Success! Added Role")
+                        console.log("Success!")
                     }
+                    initiateProgram();
                 })
-            initiateProgram();
-        })
 
+        })
 }
 
 // function roleChoices() {
@@ -162,34 +165,43 @@ function addRole() {
 
 function addEmployee() {
     console.log("in the add employee function");
-    roleChoices();
     inquirer
         .prompt([
             {
                 type: "text",
                 message: "What is the first name of the employee?",
-                name: "firstName"
+                name: "first_name"
             },
             {
                 type: "text",
                 message: "What is the last name of the employee?",
-                name: "lastName"
-            },
-            {
-                type: "list",
-                message: "What is the role of the employee?",
-                name: "employeeRole",
-                // choices: [need a function to get the list of roles, need an array of roles?]
-                choices: roleArray
+                name: "last_name"
             },
             {
                 type: "list",
                 message: "Who is the manager of the employee?",
-                name: "managerName"
+                name: "manager_id",
+                choices: managerArray
                 // choices: [need a function to get the list of managers, need array of managers?]
-            }
+            },
+            {
+                type: "list",
+                message: "What is the role of the employee?",
+                name: "role_id",
+                // choices: [need a function to get the list of roles, need an array of roles?]
+                choices: roleArray
+            },
+
         ])
-        .then((reponse) => {
+        .then((response) => {
+            db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
+                [response.first_name, response.last_name, response.manager_id, response.role_id], function (err, results) {
+                    if (err) {
+                        console.log("There was an error inserting into Employees", err)
+                    } else {
+                        console.log("Success writing employee");
+                    }
+                })
             initiateProgram();
         })
 
