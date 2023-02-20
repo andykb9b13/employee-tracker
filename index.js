@@ -19,7 +19,7 @@ const managerArray = [1, 2, 3]
 
 
 function viewEmployees() {
-    db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+    db.query('SELECT employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
         if (err) {
             console.log(err)
         }
@@ -29,7 +29,7 @@ function viewEmployees() {
 }
 
 function viewRoles() {
-    db.query('SELECT * FROM roles', function (err, results) {
+    db.query('SELECT roles.title, roles.salary, departments.name FROM roles JOIN departments ON roles.department_id = departments.id', function (err, results) {
         if (err) {
             console.log(err)
         }
@@ -55,7 +55,7 @@ function initiateProgram() {
                 type: "list",
                 message: "What would you like to do?",
                 name: "select",
-                choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role"]
+                choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Quit"]
             }
         ])
         .then((response) => {
@@ -82,8 +82,8 @@ function initiateProgram() {
                     updateEmployee()
                     break;
                 case "Quit":
-                    endProgram()
-                    break
+                    console.log("Goodbye!")
+                    return
             }
         })
 }
