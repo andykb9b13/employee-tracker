@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
-const { resourceLimits } = require('worker_threads');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
@@ -12,9 +11,9 @@ const db = mysql.createConnection(
     console.log("connected to the employees_db database")
 )
 
-const roleArray = [];
-const departmentArray = [];
-const managerArray = [];
+let roleArray = [];
+let departmentArray = [];
+let managerArray = [];
 
 function initiateProgram() {
     inquirer
@@ -56,28 +55,6 @@ function initiateProgram() {
         })
 }
 
-
-
-function viewEmployees() {
-    db.query('SELECT employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
-        if (err) {
-            console.log(err)
-        }
-        console.table("List of Employees", results);
-        initiateProgram();
-    })
-}
-
-function viewRoles() {
-    db.query('SELECT roles.title, roles.salary, departments.name FROM roles JOIN departments ON roles.department_id = departments.id', function (err, results) {
-        if (err) {
-            console.log(err)
-        }
-        console.table("Employee Roles", results);
-        initiateProgram();
-    })
-};
-
 function viewDepartments() {
     db.query('SELECT * FROM departments', function (err, results) {
         if (err) {
@@ -87,6 +64,26 @@ function viewDepartments() {
         initiateProgram();
     })
 };
+
+function viewRoles() {
+    db.query('SELECT roles.id, departments.name, roles.name, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("Employee Roles", results);
+        initiateProgram();
+    })
+};
+
+function viewEmployees() {
+    db.query('SELECT employees.id, employees.name, employees.last_name, roles.name, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("List of Employees", results);
+        initiateProgram();
+    })
+}
 
 function addDepartment() {
     console.log("in the add department function")
@@ -120,7 +117,7 @@ function addRole() {
             {
                 type: "text",
                 message: "What is the name of the role?",
-                name: "title"
+                name: "name"
             },
             {
                 type: "number",
@@ -136,8 +133,8 @@ function addRole() {
             }
         ])
         .then((response) => {
-            db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
-                [response.title, response.salary, response.department_id], function (err, results) {
+            db.query('INSERT INTO roles (name, salary, department_id) VALUES (?, ?, ?)',
+                [response.name, response.salary, response.department_id.id], function (err, results) {
                     if (err) {
                         console.log("There was an error inserting into roles", err)
                     } else {
@@ -180,11 +177,10 @@ function addEmployee() {
                 // choices: [need a function to get the list of roles, need an array of roles?]
                 choices: roleArray
             },
-
         ])
         .then((response) => {
-            db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
-                [response.first_name, response.last_name, response.manager_id, response.role_id], function (err, results) {
+            db.query('INSERT INTO employees (name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
+                [response.first_name, response.last_name, response.manager_id.id, response.role_id.id], function (err, results) {
                     if (err) {
                         console.log("There was an error inserting into Employees", err)
                     } else {
@@ -213,13 +209,14 @@ function updateEmployee() {
 }
 
 function updateRoles() {
+    roleArray = [];
     db.query('SELECT * FROM roles', (err, results) => {
         if (err) {
             console.log("couldn't get roles")
         } else {
             console.log("success")
             for (let result of results) {
-                roleArray.push(result.id)
+                roleArray.push(result)
             }
         }
         console.log("This is the role array", roleArray)
@@ -227,31 +224,36 @@ function updateRoles() {
 }
 
 function updateDepartments() {
+    departmentArray = [];
     db.query('SELECT * FROM departments', (err, results) => {
         if (err) {
             console.log("couldn't get departments")
         } else {
             console.log("success")
             for (let result of results) {
-                departmentArray.push(result.id)
+                departmentArray.push(result)
             }
         }
         console.log("This is the department array", departmentArray)
     })
 }
 
+updateDepartments();
+
 function updateManagers() {
-    db.query('SELECT first_name, last_name FROM employees WHERE role_id = 7', (err, results) => {
+    managerArray = [];
+    db.query('SELECT * FROM employees WHERE id = 4', (err, results) => {
         if (err) {
             console.log("couldn't get managers")
         } else {
             console.log("success")
             for (let result of results) {
-                managerArray.push(result.id)
+                managerArray.push(result)
             }
         }
         console.log("This is the manager array", managerArray)
     })
 }
+
 
 initiateProgram();
