@@ -1,14 +1,48 @@
-const inquirer = require("inquirer");
-const mysql = require('mysql2')
-
+const inquirer = require('inquirer');
+const mysql = require('mysql2');
+const cTable = require('console.table');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
         user: "root",
         password: "thelastwitch6",
-        db: "employees_db"
-    }
+        database: "employees_db"
+    },
+    console.log("connected to the employees_db database")
 )
+
+const employeeArray = [];
+const roleArray = [];
+
+function viewEmployees() {
+    db.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("List of Employees", results);
+        initiateProgram();
+    })
+}
+
+function viewRoles() {
+    db.query('SELECT * FROM roles', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("Employee Roles", results);
+        initiateProgram();
+    })
+};
+
+function viewDepartments() {
+    db.query('SELECT * FROM departments', function (err, results) {
+        if (err) {
+            console.log(err)
+        }
+        console.table("Departments", results);
+        initiateProgram();
+    })
+};
 
 function initiateProgram() {
     inquirer
@@ -50,23 +84,6 @@ function initiateProgram() {
         })
 }
 
-function viewDepartments() {
-    console.log("in the view department function");
-    db.query()
-    initiateProgram();
-}
-
-function viewEmployees() {
-    console.log("the the view Employees function");
-    db.query()
-    initiateProgram();
-}
-
-function viewRoles() {
-    console.log("in the view roles function");
-    db.query()
-    initiateProgram();
-}
 
 function addDepartment() {
     console.log("in the add department function")
@@ -80,8 +97,14 @@ function addDepartment() {
         ])
         .then((response) => {
             console.log("this is the response.deptName", response.deptName)
+            db.query(`INSERT INTO departments (name) VALUES (?)`, response.deptName, function (err, results) {
+                if (err) {
+                    console.log("there was an error adding dept", err)
+                } else {
+                    console.log("success, added dept")
+                }
+            })
             initiateProgram();
-
         });
 
 }
