@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+const path = require('path');
 const cTable = require('console.table');
 const db = mysql.createConnection(
     {
@@ -66,7 +67,7 @@ function viewDepartments() {
 };
 
 function viewRoles() {
-    db.query('SELECT roles.id, departments.name, roles.name, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
+    db.query('SELECT roles.id, departments.name, roles.title, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
         if (err) {
             console.log(err)
         }
@@ -76,7 +77,7 @@ function viewRoles() {
 };
 
 function viewEmployees() {
-    db.query('SELECT employees.id, employees.name, employees.last_name, roles.name, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+    db.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
         if (err) {
             console.log(err)
         }
@@ -117,7 +118,7 @@ function addRole() {
             {
                 type: "text",
                 message: "What is the name of the role?",
-                name: "name"
+                name: "title"
             },
             {
                 type: "number",
@@ -133,12 +134,13 @@ function addRole() {
             }
         ])
         .then((response) => {
-            db.query('INSERT INTO roles (name, salary, department_id) VALUES (?, ?, ?)',
-                [response.name, response.salary, response.department_id.id], function (err, results) {
+            console.log("This is the response", response)
+            db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
+                [response.title, response.salary, response.department_id], function (err, results) {
                     if (err) {
                         console.log("There was an error inserting into roles", err)
                     } else {
-                        console.log("Success!")
+                        console.log("Success!",)
                     }
                     initiateProgram();
                 })
@@ -179,8 +181,8 @@ function addEmployee() {
             },
         ])
         .then((response) => {
-            db.query('INSERT INTO employees (name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
-                [response.first_name, response.last_name, response.manager_id.id, response.role_id.id], function (err, results) {
+            db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
+                [response.first_name, response.last_name, response.manager_id, response.role_id], function (err, results) {
                     if (err) {
                         console.log("There was an error inserting into Employees", err)
                     } else {
@@ -216,7 +218,7 @@ function updateRoles() {
         } else {
             console.log("success")
             for (let result of results) {
-                roleArray.push(result)
+                roleArray.push(result.id)
             }
         }
         console.log("This is the role array", roleArray)
@@ -231,14 +233,12 @@ function updateDepartments() {
         } else {
             console.log("success")
             for (let result of results) {
-                departmentArray.push(result)
+                departmentArray.push(result.id)
             }
         }
         console.log("This is the department array", departmentArray)
     })
 }
-
-updateDepartments();
 
 function updateManagers() {
     managerArray = [];
@@ -248,7 +248,7 @@ function updateManagers() {
         } else {
             console.log("success")
             for (let result of results) {
-                managerArray.push(result)
+                managerArray.push(result.id)
             }
         }
         console.log("This is the manager array", managerArray)
