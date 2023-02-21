@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS roles;
 
 CREATE TABLE roles (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
+    title VARCHAR(50) NOT NULL,
     salary INT NOT NULL,
     department_id INT,
     FOREIGN KEY (department_id)
@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS employees;
 
 CREATE TABLE employees (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(30),
+    first_name VARCHAR(30),
     last_name VARCHAR(30),
     manager_id INT,
     role_id INT,
