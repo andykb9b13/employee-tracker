@@ -134,12 +134,17 @@ class Queries {
                     name: "department_id",
                     // choices: [need a function to get the existing departments, need array for departments?]
                     choices: departmentArray
+                },
+                {
+                    type: "confirm",
+                    message: "Is this a manager role?",
+                    name: "is_manager"
                 }
             ])
             .then((response) => {
                 console.log("This is the response", response)
-                db.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
-                    [response.title, response.salary, response.department_id], function (err, results) {
+                db.query('INSERT INTO roles (title, salary, department_id, is_manager) VALUES (?, ?, ?, ?)',
+                    [response.title, response.salary, response.department_id, response.is_manager], function (err, results) {
                         if (err) {
                             console.log("There was an error inserting into roles", err)
                         } else {
@@ -243,7 +248,7 @@ class Queries {
 
     updateManagers() {
         managerArray = [];
-        db.query('SELECT * FROM employees WHERE id = 4', (err, results) => {
+        db.query('SELECT * FROM employees LEFT JOIN roles ON roles.id = employees.role_id WHERE roles.is_manager = true', (err, results) => {
             if (err) {
                 console.log("couldn't get managers")
             } else {
