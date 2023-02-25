@@ -80,8 +80,9 @@ class Queries {
         this.initiateProgram();
     }
 
+    // TODO Need to be able to view deparment name and manager name
     viewEmployees() {
-        db.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+        db.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, employees.manager_id FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
             if (err) {
                 console.log(err)
             }
@@ -132,7 +133,6 @@ class Queries {
                     type: "list",
                     message: "What is the department for this role?",
                     name: "department_id",
-                    // choices: [need a function to get the existing departments, need array for departments?]
                     choices: departmentArray
                 },
                 {
@@ -178,19 +178,20 @@ class Queries {
                     message: "Who is the manager of the employee?",
                     name: "manager_id",
                     choices: managerArray
-                    // choices: [need a function to get the list of managers, need array of managers?]
                 },
                 {
                     type: "list",
                     message: "What is the role of the employee?",
                     name: "role_id",
-                    // choices: [need a function to get the list of roles, need an array of roles?]
                     choices: roleArray
                 },
             ])
             .then((response) => {
                 const roleId = response.role_id.role_id;
                 const managerId = response.manager_id.employee_id;
+                if (managerId === "none") {
+                    managerId = null
+                }
                 db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
                     [response.first_name, response.last_name, managerId, roleId], function (err, results) {
                         if (err) {
@@ -203,7 +204,8 @@ class Queries {
             })
     }
 
-    updateEmployee() {
+    updateEmployeeRole() {
+        // TODO Need to select an employee and then update the role for that employee
         console.log("in the update employee function");
         inquirer
             .prompt([
@@ -263,7 +265,7 @@ class Queries {
     }
 
     findManagers() {
-        managerArray = [];
+        managerArray = ["none"];
         db.query('SELECT employees.id, employees.first_name, employees.last_name FROM employees LEFT JOIN roles ON roles.id = employees.role_id WHERE roles.is_manager = true', (err, results) => {
             if (err) {
                 console.log("couldn't get managers")
@@ -287,3 +289,14 @@ class Queries {
 }
 
 module.exports = Queries;
+
+/* Bonus
+Update employee managers.
+
+View employees by manager.
+
+View employees by department.
+
+Delete departments, roles, and employees.
+
+View the total utilized budget of a department—in other words, the combined salaries of all employees in that department. */
