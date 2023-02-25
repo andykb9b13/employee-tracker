@@ -115,7 +115,7 @@ class Queries {
 
     addRole() {
         console.log("in the add Role function");
-        this.updateDepartments();
+        this.findDepartments();
         inquirer
             .prompt([
                 {
@@ -143,8 +143,9 @@ class Queries {
             ])
             .then((response) => {
                 console.log("This is the response", response)
+                const departmentId = response.department_id.department_id;
                 db.query('INSERT INTO roles (title, salary, department_id, is_manager) VALUES (?, ?, ?, ?)',
-                    [response.title, response.salary, response.department_id, response.is_manager], function (err, results) {
+                    [response.title, response.salary, departmentId, response.is_manager], function (err, results) {
                         if (err) {
                             console.log("There was an error inserting into roles", err)
                         } else {
@@ -157,9 +158,9 @@ class Queries {
 
     addEmployee() {
         console.log("in the add employee function");
-        this.updateRoles();
-        this.updateDepartments();
-        this.updateManagers();
+        this.findRoles();
+        this.findDepartments();
+        this.findManagers();
         inquirer
             .prompt([
                 {
@@ -188,10 +189,12 @@ class Queries {
                 },
             ])
             .then((response) => {
+                const roleId = response.role_id.role_id;
+                const managerId = response.manager_id.employee_id;
                 db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
-                    [response.first_name, response.last_name, response.manager_id, response.role_id], function (err, results) {
+                    [response.first_name, response.last_name, managerId, roleId], function (err, results) {
                         if (err) {
-                            console.log("There was an error inserting into Employees", err)
+                            console.log("There was an error inserting into Employees", err);
                         } else {
                             console.log("Success writing employee");
                         }
@@ -216,7 +219,7 @@ class Queries {
         this.initiateProgram();
     }
 
-    updateRoles() {
+    findRoles() {
         roleArray = [];
         db.query('SELECT * FROM roles', (err, results) => {
             if (err) {
@@ -224,14 +227,20 @@ class Queries {
             } else {
                 console.log("success")
                 for (let result of results) {
-                    roleArray.push(result.id)
+                    roleArray.push({
+                        name: result.title,
+                        value: {
+                            role_id: result.id,
+                            role_name: result.title,
+                        }
+                    })
                 }
             }
             console.log("This is the role array", roleArray)
         })
     }
 
-    updateDepartments() {
+    findDepartments() {
         departmentArray = [];
         db.query('SELECT * FROM departments', (err, results) => {
             if (err) {
@@ -239,22 +248,37 @@ class Queries {
             } else {
                 console.log("success")
                 for (let result of results) {
-                    departmentArray.push(result.id)
+                    departmentArray.push(
+                        {
+                            name: result.name,
+                            value: {
+                                department_id: result.id,
+                                department_name: result.name
+                            }
+                        })
                 }
             }
             console.log("This is the department array", departmentArray)
         })
     }
 
-    updateManagers() {
+    findManagers() {
         managerArray = [];
-        db.query('SELECT * FROM employees LEFT JOIN roles ON roles.id = employees.role_id WHERE roles.is_manager = true', (err, results) => {
+        db.query('SELECT employees.id, employees.first_name, employees.last_name FROM employees LEFT JOIN roles ON roles.id = employees.role_id WHERE roles.is_manager = true', (err, results) => {
             if (err) {
                 console.log("couldn't get managers")
             } else {
                 console.log("success")
                 for (let result of results) {
-                    managerArray.push(result.id)
+                    managerArray.push(
+                        {
+                            name: result.first_name + ' ' + result.last_name,
+                            value: {
+                                employee_id: result.id,
+                                employee_firstName: result.first_name,
+                                employee_lastName: result.last_name
+                            }
+                        });
                 }
             }
             console.log("This is the manager array", managerArray)
