@@ -18,6 +18,7 @@ CREATE TABLE roles (
     title VARCHAR(50) NOT NULL,
     salary INT NOT NULL,
     department_id INT,
+    is_manager BOOLEAN NOT NULL, 
     FOREIGN KEY (department_id)
     REFERENCES departments(id)
     ON DELETE SET NULL
