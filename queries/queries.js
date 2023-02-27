@@ -1,7 +1,6 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const dbqueries = require('./dbQueries');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
@@ -12,7 +11,6 @@ const db = mysql.createConnection(
     console.log("connected to the employees_db database")
 );
 
-const dbQueries = new dbqueries();
 
 let roleArray = [];
 let departmentArray = [];
@@ -29,7 +27,7 @@ class Queries {
                     type: "list",
                     message: "What would you like to do?",
                     name: "select",
-                    choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Delete a Department", "Delete a Role", "Delete an Employee", "Quit"]
+                    choices: ["View All Departments", "View All Employees", "View All Roles", "View Employees by Department", "View Budget by Department", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Delete a Department", "Delete a Role", "Delete an Employee", "Quit"]
                 }
             ])
             .then((response) => {
@@ -42,6 +40,12 @@ class Queries {
                         break;
                     case "View All Roles":
                         this.viewRoles();
+                        break;
+                    case "View Employees by Department":
+                        this.viewEmpByDept();
+                        break;
+                    case "View Budget by Department":
+                        this.viewBudgetByDept();
                         break;
                     case "Add a Department":
                         this.addDepartment();
@@ -82,12 +86,6 @@ class Queries {
         this.initiateProgram()
     }
 
-    // viewDepartments() {
-    //     const departments = dbQueries.viewDepartments();
-    //     console.log(departments)
-    // }
-
-
     viewRoles() {
         db.query('SELECT roles.id, departments.name, roles.title, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
             if (err) {
@@ -108,6 +106,69 @@ class Queries {
             console.table("List of Employees", results);
         })
         this.initiateProgram();
+    }
+
+    viewEmpByDept() {
+        this.findDepartments();
+        inquirer
+            .prompt([
+                {
+                    type: "confirm",
+                    message: "Are you sure you want to view employees by department?",
+                    name: "confirm"
+                }
+            ])
+            .then((response) => {
+                if (response.confirm) {
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Which department would you like to view?",
+                                name: "chooseDept",
+                                choices: departmentArray
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`SELECT * FROM employees JOIN roles ON roles.id = employees.role_id JOIN departments ON roles.department_id = departments.id WHERE departments.id = ${response.chooseDept.department_id}`, (err, results) => {
+                                console.table(`Employees in ${response.chooseDept.name}`, results)
+                            })
+                            this.initiateProgram()
+                        })
+                } else { this.initiateProgram() }
+            })
+    }
+
+    viewBudgetByDept() {
+        this.findDepartments();
+        inquirer
+            .prompt([
+                {
+                    type: "confirm",
+                    message: "Are you sure you want to view the budget by department?",
+                    name: "confirm"
+                }
+            ])
+            .then((response) => {
+                if (response.confirm) {
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Which department's budget would you like to view?",
+                                name: "chooseDept",
+                                choices: departmentArray
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`SELECT SUM (salary) FROM roles JOIN employees ON roles.id = employees.role_id JOIN departments ON roles.department_id = departments.id WHERE departments.id = ${response.chooseDept.department_id}`, (err, results) => {
+                                console.table(`Total budget in ${response.chooseDept.name}`, results)
+                            })
+                            this.initiateProgram()
+                        })
+                } else { this.initiateProgram() }
+            })
+
     }
 
     addDepartment() {
