@@ -202,13 +202,18 @@ class Queries {
             })
     }
 
-    updateEmployeeRole() {
+    async updateEmployeeRole() {
         // These functions are not getting the employee info in enough time to send it to the prompt
         // Need to use an async function?
-        this.findEmployees();
+        this.findEmployees()
         this.findRoles();
         inquirer
             .prompt([
+                {
+                    type: "confirm",
+                    message: "Will this employee be a manager?",
+                    name: "manager"
+                },
                 {
                     type: "list",
                     message: "Which employee would you like to update?",
@@ -223,7 +228,7 @@ class Queries {
                 }
             ])
             .then((response) => {
-                db.query('SELECT * FROM employees', (err, results) => {
+                db.query(`UPDATE employees SET role_id = ${response.change_role.role_id} WHERE id = ${response.choose_employee.employee_id}`, (err, results) => {
                     if (err) {
                         console.log("Error changing the role", err);
                         return
