@@ -14,6 +14,7 @@ const db = mysql.createConnection(
 let roleArray = [];
 let departmentArray = [];
 let managerArray = [];
+let employeeArray = [];
 
 class Queries {
     constructor() { }
@@ -49,7 +50,7 @@ class Queries {
                         this.addEmployee();
                         break;
                     case "Update an Employee Role":
-                        this.updateEmployee();
+                        this.updateEmployeeRole();
                         break;
                     case "Quit":
                         console.log("Goodbye!")
@@ -61,10 +62,10 @@ class Queries {
     viewDepartments() {
         db.query('SELECT * FROM departments', function (err, results) {
             if (err) {
-                console.log(err)
+                console.log(err);
+                return
             }
             console.table("Departments", results);
-
         })
         this.initiateProgram();
     }
@@ -72,18 +73,20 @@ class Queries {
     viewRoles() {
         db.query('SELECT roles.id, departments.name, roles.title, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
             if (err) {
-                console.log(err)
+                console.log(err);
+                return
             }
             console.table("Employee Roles", results);
-
         })
         this.initiateProgram();
     }
 
+    // TODO Need to be able to view deparment name and manager name
     viewEmployees() {
-        db.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary FROM employees JOIN roles ON employees.role_id = roles.id;', function (err, results) {
+        db.query('SELECT * FROM employees JOIN roles ON employees.role_id = roles.id JOIN departments ON departments.id = roles.department_id', function (err, results) {
             if (err) {
-                console.log(err)
+                console.log(err);
+                return
             }
             console.table("List of Employees", results);
         })
@@ -91,7 +94,7 @@ class Queries {
     }
 
     addDepartment() {
-        console.log("in the add department function")
+        console.log("in the add department function");
         inquirer
             .prompt([
                 {
@@ -101,20 +104,18 @@ class Queries {
                 }
             ])
             .then((response) => {
-                console.log("this is the response.deptName", response.deptName)
                 db.query(`INSERT INTO departments (name) VALUES (?)`, response.deptName, function (err, results) {
                     if (err) {
-                        console.log("there was an error adding dept", err)
-                    } else {
-                        console.log("success, added dept")
+                        console.log("there was an error adding dept", err);
+                        return
                     }
+                    console.log("success, added dept");
                 })
                 this.initiateProgram();
             })
     }
 
     addRole() {
-        console.log("in the add Role function");
         this.findDepartments();
         inquirer
             .prompt([
@@ -132,7 +133,6 @@ class Queries {
                     type: "list",
                     message: "What is the department for this role?",
                     name: "department_id",
-                    // choices: [need a function to get the existing departments, need array for departments?]
                     choices: departmentArray
                 },
                 {
@@ -142,22 +142,20 @@ class Queries {
                 }
             ])
             .then((response) => {
-                console.log("This is the response", response)
                 const departmentId = response.department_id.department_id;
                 db.query('INSERT INTO roles (title, salary, department_id, is_manager) VALUES (?, ?, ?, ?)',
                     [response.title, response.salary, departmentId, response.is_manager], function (err, results) {
                         if (err) {
-                            console.log("There was an error inserting into roles", err)
-                        } else {
-                            console.log("Success!",)
+                            console.log("There was an error inserting into roles", err);
+                            return
                         }
+                        console.log("Success!");
                     })
                 this.initiateProgram();
             })
     }
 
     addEmployee() {
-        console.log("in the add employee function");
         this.findRoles();
         this.findDepartments();
         this.findManagers();
@@ -178,45 +176,62 @@ class Queries {
                     message: "Who is the manager of the employee?",
                     name: "manager_id",
                     choices: managerArray
-                    // choices: [need a function to get the list of managers, need array of managers?]
                 },
                 {
                     type: "list",
                     message: "What is the role of the employee?",
                     name: "role_id",
-                    // choices: [need a function to get the list of roles, need an array of roles?]
                     choices: roleArray
                 },
             ])
             .then((response) => {
                 const roleId = response.role_id.role_id;
                 const managerId = response.manager_id.employee_id;
+                if (managerId === "none") {
+                    managerId = null
+                }
                 db.query('INSERT INTO employees (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)',
                     [response.first_name, response.last_name, managerId, roleId], function (err, results) {
                         if (err) {
                             console.log("There was an error inserting into Employees", err);
-                        } else {
-                            console.log("Success writing employee");
+                            return
                         }
+                        console.log("Success writing employee");
                     })
                 this.initiateProgram();
             })
     }
 
-    updateEmployee() {
-        console.log("in the update employee function");
+    updateEmployeeRole() {
+        // These functions are not getting the employee info in enough time to send it to the prompt
+        // Need to use an async function?
+        this.findEmployees();
+        this.findRoles();
         inquirer
             .prompt([
                 {
                     type: "list",
                     message: "Which employee would you like to update?",
-                    name: "roleUpdate"
+                    name: "choose_employee",
+                    choices: employeeArray
+                },
+                {
+                    type: "list",
+                    message: "Which role would you like the employee to have?",
+                    name: "change_role",
+                    choices: roleArray
                 }
             ])
             .then((response) => {
-
+                db.query('SELECT * FROM employees', (err, results) => {
+                    if (err) {
+                        console.log("Error changing the role", err);
+                        return
+                    }
+                    console.log("success!")
+                })
+                this.initiateProgram();
             })
-        this.initiateProgram();
     }
 
     findRoles() {
@@ -224,6 +239,7 @@ class Queries {
         db.query('SELECT * FROM roles', (err, results) => {
             if (err) {
                 console.log("couldn't get roles")
+                return
             } else {
                 console.log("success")
                 for (let result of results) {
@@ -236,7 +252,7 @@ class Queries {
                     })
                 }
             }
-            console.log("This is the role array", roleArray)
+            console.log("this is the role array", roleArray)
         })
     }
 
@@ -245,45 +261,73 @@ class Queries {
         db.query('SELECT * FROM departments', (err, results) => {
             if (err) {
                 console.log("couldn't get departments")
-            } else {
-                console.log("success")
-                for (let result of results) {
-                    departmentArray.push(
-                        {
-                            name: result.name,
-                            value: {
-                                department_id: result.id,
-                                department_name: result.name
-                            }
-                        })
-                }
+                return
+            } for (let result of results) {
+                departmentArray.push(
+                    {
+                        name: result.name,
+                        value: {
+                            department_id: result.id,
+                            department_name: result.name
+                        }
+                    })
             }
-            console.log("This is the department array", departmentArray)
         })
     }
 
     findManagers() {
-        managerArray = [];
+        managerArray = ["none"];
         db.query('SELECT employees.id, employees.first_name, employees.last_name FROM employees LEFT JOIN roles ON roles.id = employees.role_id WHERE roles.is_manager = true', (err, results) => {
             if (err) {
                 console.log("couldn't get managers")
-            } else {
-                console.log("success")
-                for (let result of results) {
-                    managerArray.push(
-                        {
-                            name: result.first_name + ' ' + result.last_name,
-                            value: {
-                                employee_id: result.id,
-                                employee_firstName: result.first_name,
-                                employee_lastName: result.last_name
-                            }
-                        });
-                }
+                return
+            } for (let result of results) {
+                managerArray.push(
+                    {
+                        name: result.first_name + ' ' + result.last_name,
+                        value: {
+                            employee_id: result.id,
+                            employee_firstName: result.first_name,
+                            employee_lastName: result.last_name
+                        }
+                    })
             }
             console.log("This is the manager array", managerArray)
+        })
+    }
+
+    findEmployees() {
+        employeeArray = [];
+        db.query('SELECT * FROM employees', (err, results) => {
+            if (err) {
+                console.log("couldn't get employees")
+                return
+            } for (let result of results) {
+                employeeArray.push(
+                    {
+                        name: result.first_name + ' ' + result.last_name,
+                        value: {
+                            employee_id: result.id,
+                            employee_firstName: result.first_name,
+                            employee_lastName: result.last_name,
+                            employee_roleId: result.role_id
+                        }
+                    })
+            }
+            // console.log("This is the employee array", employeeArray)
         })
     }
 }
 
 module.exports = Queries;
+
+/* Bonus
+Update employee managers.
+
+View employees by manager.
+
+View employees by department.
+
+Delete departments, roles, and employees.
+
+View the total utilized budget of a department—in other words, the combined salaries of all employees in that department. */
