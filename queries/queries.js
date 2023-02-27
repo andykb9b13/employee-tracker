@@ -1,6 +1,7 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
-const cTable = require('console.table')
+const cTable = require('console.table');
+const dbqueries = require('./dbQueries');
 const db = mysql.createConnection(
     {
         host: "127.0.0.1",
@@ -10,6 +11,8 @@ const db = mysql.createConnection(
     },
     console.log("connected to the employees_db database")
 );
+
+const dbQueries = new dbqueries();
 
 let roleArray = [];
 let departmentArray = [];
@@ -26,7 +29,7 @@ class Queries {
                     type: "list",
                     message: "What would you like to do?",
                     name: "select",
-                    choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Quit"]
+                    choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Delete a Department", "Delete a Role", "Delete an Employee", "Quit"]
                 }
             ])
             .then((response) => {
@@ -52,6 +55,15 @@ class Queries {
                     case "Update an Employee Role":
                         this.updateEmployeeRole();
                         break;
+                    case "Delete a Department":
+                        this.deleteDepartment();
+                        break;
+                    case "Delete a Role":
+                        this.deleteRole();
+                        break;
+                    case "Delete an Employee":
+                        this.deleteEmployee();
+                        break;
                     case "Quit":
                         console.log("Goodbye!")
                         return
@@ -67,8 +79,14 @@ class Queries {
             }
             console.table("Departments", results);
         })
-        this.initiateProgram();
+        this.initiateProgram()
     }
+
+    // viewDepartments() {
+    //     const departments = dbQueries.viewDepartments();
+    //     console.log(departments)
+    // }
+
 
     viewRoles() {
         db.query('SELECT roles.id, departments.name, roles.title, roles.salary FROM departments JOIN roles ON roles.department_id = departments.id', function (err, results) {
@@ -81,7 +99,6 @@ class Queries {
         this.initiateProgram();
     }
 
-    // TODO Need to be able to view deparment name and manager name
     viewEmployees() {
         db.query('SELECT * FROM employees JOIN roles ON employees.role_id = roles.id JOIN departments ON departments.id = roles.department_id', function (err, results) {
             if (err) {
@@ -202,7 +219,7 @@ class Queries {
             })
     }
 
-    async updateEmployeeRole() {
+    updateEmployeeRole() {
         // These functions are not getting the employee info in enough time to send it to the prompt
         // Need to use an async function?
         this.findEmployees()
@@ -321,6 +338,118 @@ class Queries {
             }
             // console.log("This is the employee array", employeeArray)
         })
+    }
+
+    deleteDepartment() {
+        this.findDepartments();
+        inquirer
+            .prompt([
+                {
+                    type: "confirm",
+                    message: "Are you sure you want to delete a department?",
+                    name: "confirmDelete"
+                }
+            ])
+            .then((response) => {
+                if (response.confirmDelete) {
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Which department would you like to delete?",
+                                name: "deptDelete",
+                                choices: departmentArray
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`DELETE FROM departments WHERE id = ${response.deptDelete.department_id}`, (err, results) => {
+                                if (err) {
+                                    console.log("Error deleting department", err)
+                                }
+                                console.log("success deleting department")
+                            })
+                            this.initiateProgram()
+                        })
+                }
+                else {
+                    this.initiateProgram()
+                }
+            })
+    }
+
+    deleteRole() {
+        this.findRoles();
+        inquirer
+            .prompt([
+                {
+                    type: "confirm",
+                    message: "Are you sure you want to delete a role?",
+                    name: "confirmDelete"
+                }
+            ])
+            .then((response) => {
+                if (response.confirmDelete) {
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Which role would you like to delete?",
+                                name: "roleDelete",
+                                choices: roleArray
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`DELETE FROM roles WHERE id = ${response.roleDelete.role_id}`, (err, results) => {
+                                if (err) {
+                                    console.log("Error deleting role", err)
+                                }
+                                console.log("success deleting role")
+                            })
+                            this.initiateProgram()
+                        })
+                }
+                else {
+                    this.initiateProgram()
+                }
+            })
+    }
+
+    deleteEmployee() {
+        this.findEmployees();
+        inquirer
+            .prompt([
+                {
+                    type: "confirm",
+                    message: "Are you sure you want to delete an employee?",
+                    name: "confirmDelete"
+                }
+            ])
+            .then((response) => {
+                if (response.confirmDelete) {
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Which employee would you like to delete?",
+                                name: "employeeDelete",
+                                choices: employeeArray
+                            }
+                        ])
+                        .then((response) => {
+                            db.query(`DELETE FROM employees WHERE id = ${response.employeeDelete.employee_id}`, (err, results) => {
+                                if (err) {
+                                    console.log("Error deleting employee", err)
+                                }
+                                console.log("success deleting employee")
+                            })
+                            this.initiateProgram()
+                        })
+                }
+                else {
+                    this.initiateProgram()
+                }
+            })
+
     }
 }
 
