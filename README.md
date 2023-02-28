@@ -21,7 +21,8 @@ This is a command-line application so the command for initializing the applicato
 
 Upon initializing, the user will be prompted with several choices which will include viewing, updating, and deleting information about departments, roles, and employees. 
 
-
+[Tutorial Video](https://drive.google.com/file/d/1nrmpEOPDLnbCQLELEAugV4a73ThVjAyh/view)
+![Tutorial pic](./assets/employee-tracker-tutorial.png)
 
 ## Contributing
 This application is open to contributions. 
