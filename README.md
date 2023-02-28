@@ -2,7 +2,7 @@
 ![License Badge](https://img.shields.io/github/license/andykb9b13/employee-tracker)
 
 ## Description
-a command-line application from scratch to manage a company's employee database, using Node.js, Inquirer, and MySQ
+This is a command-line application that organizes and displays information regarding the structure of an organization including departments, roles, and employees based on user input. Information can be updated and deleted in the app. 
 
 ## Table of Contents
 1. [Installing Dependencies](#installing-dependencies)
@@ -17,16 +17,20 @@ a command-line application from scratch to manage a company's employee database,
 npm install
 
 ## Usage
-Edit Usage
+This is a command-line application so the command for initializing the applicaton is: node index.js. 
+
+Upon initializing, the user will be prompted with several choices which will include viewing, updating, and deleting information about departments, roles, and employees. 
+
+
 
 ## Contributing
-This app is open for contributions regarding functionality and design. 
+This application is open to contributions. 
             
 ## Testing
-There are no tests currently.
+There are currently no tests for this application.
             
 ## Reporting Errors
-Report errors to andy.kleindienst@gmail.com
+Please report all errors to andy.kleindienst@gmail.com
 
 ## License
 MIT License
