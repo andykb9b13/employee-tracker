@@ -65,21 +65,22 @@ function initiateProgram() {
 
 async function viewDepartments() {
     const [departments] = await dbQueries.viewDepartments();
-    console.table(departments)
-    initiateProgram()
-}
-
-async function viewRoles() {
-    const [roles] = await dbQueries.viewRoles();
-    console.table(roles)
+    console.table("DEPARTMENTS", departments)
     initiateProgram()
 }
 
 async function viewEmployees() {
     const [employees] = await dbQueries.viewAllEmployees();
-    console.table("List of Employees", employees);
+    console.table("EMPLOYEES", employees);
     initiateProgram();
 }
+
+async function viewRoles() {
+    const [roles] = await dbQueries.viewRoles();
+    console.table("ROLES", roles)
+    initiateProgram()
+}
+
 
 async function addDepartment() {
     const response = await inquirer
@@ -91,7 +92,7 @@ async function addDepartment() {
             }
         ])
     dbQueries.addDepartment(response)
-    initiateProgram();
+    viewDepartments()
 }
 
 async function addRole() {
@@ -122,7 +123,6 @@ async function addRole() {
         ])
     dbQueries.addRole(response)
     viewRoles();
-    initiateProgram();
 }
 
 async function addEmployee() {
@@ -154,9 +154,8 @@ async function addEmployee() {
                 choices: roleArray
             },
         ])
-    dbQueries.addEmployee(response, manager);
+    dbQueries.addEmployee(response);
     viewEmployees();
-    initiateProgram();
 }
 
 async function updateEmployeeRole() {
@@ -180,6 +179,67 @@ async function updateEmployeeRole() {
     await dbQueries.updateEmployeeRole(response);
     viewEmployees();
 }
+
+async function deleteDepartment() {
+    const departmentArray = await findDepartments();
+    const response = await inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which department would you like to delete?",
+                name: "deptDelete",
+                choices: departmentArray
+            }
+        ])
+    await dbQueries.deleteDepartment(response);
+    viewDepartments();
+}
+
+async function deleteRole() {
+    const roleArray = await findRoles();
+    const response = await inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which role would you like to delete?",
+                name: "roleDelete",
+                choices: roleArray
+            }
+        ])
+    await dbQueries.deleteRole(response);
+    viewRoles();
+}
+
+async function deleteEmployee() {
+    const employeeArray = await findEmployees();
+    const response = await inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which employee would you like to delete?",
+                name: "employeeDelete",
+                choices: employeeArray
+            }
+        ])
+    await dbQueries.deleteEmployee(response);
+    viewEmployees();
+}
+
+async function viewBudget() {
+    const departmentArray = await findDepartments()
+    const response = await inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which department's budget would you like to view?",
+                name: "deptChoice",
+                choices: departmentArray
+            }
+        ])
+    await dbQueries.viewBudget(response)
+    console.table("BUDGET", response)
+}
+
 
 async function findRoles() {
     const [roleArray] = await dbQueries.findRoles()
@@ -227,7 +287,7 @@ async function findManagers() {
 
 async function findEmployees() {
     const [employeeArray] = await dbQueries.viewEmployees()
-    const newArray = employeeArray.map((result) => {
+    const newEmployeeArray = employeeArray.map((result) => {
         return {
             name: result.first_name + ' ' + result.last_name,
             value: {
@@ -238,119 +298,7 @@ async function findEmployees() {
             }
         }
     })
-    return newArray
-}
-
-function deleteDepartment() {
-    findDepartments();
-    inquirer
-        .prompt([
-            {
-                type: "confirm",
-                message: "Are you sure you want to delete a department?",
-                name: "confirmDelete"
-            }
-        ])
-        .then((response) => {
-            if (response.confirmDelete) {
-                inquirer
-                    .prompt([
-                        {
-                            type: "list",
-                            message: "Which department would you like to delete?",
-                            name: "deptDelete",
-                            choices: departmentArray
-                        }
-                    ])
-                    .then((response) => {
-                        db.query(`DELETE FROM departments WHERE id = ${response.deptDelete.department_id}`, (err, results) => {
-                            if (err) {
-                                console.log("Error deleting department", err)
-                            }
-                            console.log("success deleting department")
-                        })
-                        initiateProgram()
-                    })
-            }
-            else {
-                initiateProgram()
-            }
-        })
-}
-
-function deleteRole() {
-    findRoles();
-    inquirer
-        .prompt([
-            {
-                type: "confirm",
-                message: "Are you sure you want to delete a role?",
-                name: "confirmDelete"
-            }
-        ])
-        .then((response) => {
-            if (response.confirmDelete) {
-                inquirer
-                    .prompt([
-                        {
-                            type: "list",
-                            message: "Which role would you like to delete?",
-                            name: "roleDelete",
-                            choices: roleArray
-                        }
-                    ])
-                    .then((response) => {
-                        db.query(`DELETE FROM roles WHERE id = ${response.roleDelete.role_id}`, (err, results) => {
-                            if (err) {
-                                console.log("Error deleting role", err)
-                            }
-                            console.log("success deleting role")
-                        })
-                        initiateProgram()
-                    })
-            }
-            else {
-                initiateProgram()
-            }
-        })
-}
-
-function deleteEmployee() {
-    findEmployees();
-    inquirer
-        .prompt([
-            {
-                type: "confirm",
-                message: "Are you sure you want to delete an employee?",
-                name: "confirmDelete"
-            }
-        ])
-        .then((response) => {
-            if (response.confirmDelete) {
-                inquirer
-                    .prompt([
-                        {
-                            type: "list",
-                            message: "Which employee would you like to delete?",
-                            name: "employeeDelete",
-                            choices: employeeArray
-                        }
-                    ])
-                    .then((response) => {
-                        db.query(`DELETE FROM employees WHERE id = ${response.employeeDelete.employee_id}`, (err, results) => {
-                            if (err) {
-                                console.log("Error deleting employee", err)
-                            }
-                            console.log("success deleting employee")
-                        })
-                        initiateProgram()
-                    })
-            }
-            else {
-                initiateProgram()
-            }
-        })
-
+    return newEmployeeArray
 }
 
 initiateProgram()
