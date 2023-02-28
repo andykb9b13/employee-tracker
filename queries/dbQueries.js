@@ -105,11 +105,11 @@ class dbQueries {
 
     viewBudget(response) {
         return db.query(
-            `SELECT SUM (salary) 
+            `SELECT SUM(salary) AS ${response.deptChoice.department_name} 
             FROM roles
-            JOIN departments ON roles.department_id = departments.id
-            WHERE department.id = ${response.department_id}`
-        )
+            JOIN employees ON roles.id = employees.role_id 
+            JOIN departments ON roles.department_id = departments.id 
+            WHERE departments.id = ${response.deptChoice.department_id}`)
     }
 }
 

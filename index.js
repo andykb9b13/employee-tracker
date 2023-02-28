@@ -2,15 +2,6 @@ const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const dbqueries = require('./queries/dbQueries');
-const db = mysql.createConnection(
-    {
-        host: "127.0.0.1",
-        user: "root",
-        password: "thelastwitch6",
-        database: "employees_db"
-    },
-    console.log("connected to the employees_db database")
-);
 
 const dbQueries = new dbqueries();
 
@@ -21,7 +12,7 @@ function initiateProgram() {
                 type: "list",
                 message: "What would you like to do?",
                 name: "select",
-                choices: ["View All Departments", "View All Employees", "View All Roles", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Delete a Department", "Delete a Role", "Delete an Employee", "Quit"]
+                choices: ["View All Departments", "View All Employees", "View All Roles", "View Budget By Department", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Delete a Department", "Delete a Role", "Delete an Employee", "Quit"]
             }
         ])
         .then((response) => {
@@ -34,6 +25,9 @@ function initiateProgram() {
                     break;
                 case "View All Roles":
                     viewRoles();
+                    break;
+                case "View Budget By Department":
+                    viewBudget();
                     break;
                 case "Add a Department":
                     addDepartment();
@@ -81,6 +75,22 @@ async function viewRoles() {
     initiateProgram()
 }
 
+async function viewBudget() {
+    const departmentArray = await findDepartments()
+    const response = await inquirer
+        .prompt([
+            {
+                type: "list",
+                message: "Which department's budget would you like to view?",
+                name: "deptChoice",
+                choices: departmentArray
+            }
+        ])
+    console.log(response.deptChoice.department_name);
+    const [budget] = await dbQueries.viewBudget(response);
+    console.table("BUDGET", budget);
+    initiateProgram();
+}
 
 async function addDepartment() {
     const response = await inquirer
@@ -224,22 +234,6 @@ async function deleteEmployee() {
     await dbQueries.deleteEmployee(response);
     viewEmployees();
 }
-
-async function viewBudget() {
-    const departmentArray = await findDepartments()
-    const response = await inquirer
-        .prompt([
-            {
-                type: "list",
-                message: "Which department's budget would you like to view?",
-                name: "deptChoice",
-                choices: departmentArray
-            }
-        ])
-    await dbQueries.viewBudget(response)
-    console.table("BUDGET", response)
-}
-
 
 async function findRoles() {
     const [roleArray] = await dbQueries.findRoles()
