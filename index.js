@@ -86,7 +86,6 @@ async function viewBudget() {
                 choices: departmentArray
             }
         ])
-    console.log(response.deptChoice.department_name);
     const [budget] = await dbQueries.viewBudget(response);
     console.table("BUDGET", budget);
     initiateProgram();
@@ -138,7 +137,6 @@ async function addRole() {
 async function addEmployee() {
     const roleArray = await findRoles();
     const managerArray = await findManagers();
-    console.log(managerArray)
     const response = await inquirer
         .prompt([
             {
